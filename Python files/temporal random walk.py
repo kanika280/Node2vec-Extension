@@ -20,17 +20,17 @@ class TemporalRandomWalker:
         Assigns probabilities based on recency using an exponential decay function.
         """
         time_diffs = np.array([timestamps[n] - current_time for n in neighbors])
-        valid_indices = time_diffs >= 0  # Only allow forward-time traversal
+        valid_indices = time_diffs >= 0  
 
-        if not np.any(valid_indices):  # If no valid next step, return uniform probabilities
+        if not np.any(valid_indices):  
             return np.ones(len(neighbors)) / len(neighbors)
 
-        decay_weights = np.exp(-self.decay_factor * time_diffs[valid_indices])  # Apply decay
+        decay_weights = np.exp(-self.decay_factor * time_diffs[valid_indices]) 
 
-        if np.sum(decay_weights) == 0:  # Avoid division by zero
+        if np.sum(decay_weights) == 0:  
             return np.ones(len(neighbors)) / len(neighbors)
 
-        decay_weights /= np.sum(decay_weights)  # Normalize probabilities
+        decay_weights /= np.sum(decay_weights) 
 
         probs = np.zeros(len(neighbors))
         probs[valid_indices] = decay_weights
@@ -47,15 +47,13 @@ class TemporalRandomWalker:
         for _ in range(self.walk_length - 1):
             neighbors = list(self.graph.neighbors(walk[-1]))
             if not neighbors:
-                break  # No more steps possible
-
+                break  
             timestamps = {n: self.graph.nodes[n].get('timestamp', float('inf')) for n in neighbors}
             probs = self.time_weighted_probabilities(neighbors, timestamps, current_time)
 
             next_node = np.random.choice(neighbors, p=probs)
             walk.append(next_node)
-            current_time = timestamps[next_node]  # Move to new node's timestamp
-
+            current_time = timestamps[next_node] 
         return walk
 
     def generate_walks(self):
@@ -69,9 +67,8 @@ class TemporalRandomWalker:
         return walks
 
 
-# Example Usage
 if __name__ == "__main__":
-    # Load your temporal graph (Assuming it's already processed with timestamps)
+  
     import pickle
 
     with open("processed_arxiv_graph.pkl", "rb") as f:
@@ -80,7 +77,6 @@ if __name__ == "__main__":
     walker = TemporalRandomWalker(arxiv_graph, walk_length=10, num_walks=5, decay_factor=0.9)
     walks = walker.generate_walks()
 
-    # Save the generated walks
     with open("temporal_walks.txt", "w") as f:
         for walk in walks:
             f.write(" ".join(map(str, walk)) + "\n")
