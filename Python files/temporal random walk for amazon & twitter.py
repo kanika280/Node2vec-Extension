@@ -14,22 +14,21 @@ class TemporalRandomWalker:
 
     def time_weighted_probabilities(self, neighbors, timestamps, current_time):
         time_diffs = np.array([timestamps[n] - current_time for n in neighbors])
-        valid_indices = time_diffs >= 0  # Only allow forward-time traversal
+        valid_indices = time_diffs >= 0 
 
         if not np.any(valid_indices):
             return np.ones(len(neighbors)) / len(neighbors)
 
         decay_weights = np.exp(-self.decay_factor * time_diffs[valid_indices])
 
-        if np.sum(decay_weights) == 0:  # Prevent division by zero
+        if np.sum(decay_weights) == 0: 
             return np.ones(len(neighbors)) / len(neighbors)
 
-        decay_weights /= np.sum(decay_weights)  # Normalize probabilities
+        decay_weights /= np.sum(decay_weights) 
 
         probs = np.zeros(len(neighbors))
         probs[valid_indices] = decay_weights
 
-        # **Fix NaN Issue**: Replace NaNs with uniform probabilities
         if np.isnan(probs).any():
             probs = np.ones(len(neighbors)) / len(neighbors)
 
@@ -37,7 +36,7 @@ class TemporalRandomWalker:
 
     def temporal_random_walk(self, start_node):
         walk = [start_node]
-        current_time = self.graph.nodes[start_node].get('timestamp', 0)  # Default timestamp if missing
+        current_time = self.graph.nodes[start_node].get('timestamp', 0)  
 
         for _ in range(self.walk_length - 1):
             neighbors = list(self.graph.neighbors(walk[-1]))
@@ -59,15 +58,12 @@ class TemporalRandomWalker:
             for _ in range(self.num_walks):
                 walks.append(self.temporal_random_walk(node))
 
-        # Save walks
         with open(f"temporal_walks_{self.dataset_name}.txt", "w") as f:
             for walk in walks:
                 f.write(" ".join(map(str, walk)) + "\n")
 
         print(f"✅ Temporal random walks generated and saved for {self.dataset_name}!")
 
-
-# Process Amazon & Twitter
 datasets = {
     "amazon": "processed_amazon_graph_with_timestamps.pkl",
     "twitter": "processed_twitter_graph.pkl",
